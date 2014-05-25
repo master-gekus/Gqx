@@ -23,6 +23,8 @@ private slots:
 private:
 	QByteArray	m_strFileName;
 	GLogger::LogFlags	m_nFlags;
+
+	friend class GLogger;
 };
 
 #endif // GLOGGER_PRIVATE_H

@@ -109,7 +109,7 @@ void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
 }
 
 static QMap<int,GOutputLoggerThread*>	_pOutputs;
-static int								_nCurOutputChannel;
+static int								_nCurOutputChannel = 0;
 static QMutex							_pOutputsMutex( QMutex::NonRecursive );
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,6 +141,8 @@ GLogger* GLogger::instance()
 
 int GLogger::startOutput( QString strFileName, LogFlags nFlags )
 {
+	if( 0 == _pMainLoggerThread ) return (-1);
+
 	QByteArray strCanonicalFullName;
 
 	if( !strFileName.isEmpty() ) {
@@ -161,15 +163,47 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
 		}
 	}
 
-//	QMutexLocker pLock
+	QMutexLocker pLock( &_pOutputsMutex );
 
+	foreach( int i, _pOutputs.keys() ) {
+		GOutputLoggerThread *pThread = _pOutputs[i];
+		#ifdef _WIN32
+			if( 0 == qstricmp( pThread->m_strFileName.constData(), strCanonicalFullName.constData() ) ) {
+		#else
+			if( pThread->m_strFileName == strCanonicalFullName  ) {
+		#endif
 
+			// Собственно, поток нашли - подправим флаги и вернём индекс
+			pThread->m_nFlags = nFlags;
+			return i;
+		}
+	}
 
-	return (-1);
+	// Потока нет - стало быть, нужно создать!
+	int nNewIndex = ++_nCurOutputChannel;
+
+	GOutputLoggerThread *pThread = new GOutputLoggerThread( strCanonicalFullName, nFlags );
+	_pMainLogger.connect( &_pMainLogger, SIGNAL(newLoggedEvent(GLoggerEvent)), pThread, SLOT(onNewLoggedEvent(GLoggerEvent)), Qt::QueuedConnection );
+	_pOutputs[nNewIndex] = pThread;
+
+	return nNewIndex;
 }
 
 void GLogger::stopOutput( int nChannel )
 {
+	GOutputLoggerThread *pThread = 0;
+
+	{
+		QMutexLocker pLock( &_pOutputsMutex );
+
+		if( !_pOutputs.contains( nChannel ) ) return;
+
+		pThread = _pOutputs[nChannel];
+		_pOutputs.remove( nChannel );
+	}
+
+	pThread->stopAndWait();
+	delete pThread;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
