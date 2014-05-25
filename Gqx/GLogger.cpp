@@ -219,6 +219,9 @@ void GLogger::vwrite( int nLevel, const char *strFormat, va_list pArgs )
 		return;
 	}
 
+	va_list pCopy;
+	va_copy( pCopy, pArgs );
+
 	#ifdef _WIN32
 		int nSize = _vscprintf( strFormat, pArgs );
 	#else
@@ -227,7 +230,7 @@ void GLogger::vwrite( int nLevel, const char *strFormat, va_list pArgs )
 
 	char* strLine = (char*) alloca( nSize + 3 );
 
-	vsnprintf( strLine, nSize + 3, strFormat, pArgs );
+	vsnprintf( strLine, nSize + 3, strFormat, pCopy );
 
 	QCoreApplication::postEvent( _pMainLoggerThread, new GInternalLoggerEvent( nLevel, strLine ) );
 }
