@@ -105,7 +105,7 @@ GOutputLoggerThread::~GOutputLoggerThread()
 
 void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
 {
-	qDebug() << pEvent.level() << pEvent.datetime() << pEvent.message();
+	qDebug() << pEvent.level() << pEvent.datetime() << pEvent.message().constData();
 }
 
 static QMap<int,GOutputLoggerThread*>	_pOutputs;
@@ -128,10 +128,14 @@ void GLogger::stop()
 {
 	if( 0 == _pMainLoggerThread ) return;
 
-	QMetaObject::invokeMethod( _pMainLoggerThread, "quit", Qt::QueuedConnection );
-	_pMainLoggerThread->wait();
+	_pMainLoggerThread->stopAndWait();
 	delete _pMainLoggerThread;
 	_pMainLoggerThread = 0;
+
+
+	// Теперь
+
+
 }
 
 GLogger* GLogger::instance()
@@ -210,6 +214,11 @@ void GLogger::stopOutput( int nChannel )
 /// GLogger - собственно запись в лог
 void GLogger::vwrite( int nLevel, const char *strFormat, va_list pArgs )
 {
+	if( 0 == _pMainLoggerThread ) {
+		qDebug( "GLogger::vwrite():: GLogger not started!" );
+		return;
+	}
+
 	#ifdef _WIN32
 		int nSize = _vscprintf( strFormat, pArgs );
 	#else
