@@ -69,7 +69,7 @@ private:
 		releaseSemaphore();
 	}
 
-	bool GMainLoggerThread::event( QEvent *pEvent )
+	bool event( QEvent *pEvent )
 	{
 		if( pEvent->type() != _nLogEvent )
 			return GSelfOwnedThread::event( pEvent );

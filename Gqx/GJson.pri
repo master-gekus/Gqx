@@ -8,6 +8,8 @@ INCLUDEPATH *= $$PWD
 #	message( "USING msgpack" )
 #}
 
+!win32: LIBS *= -lrt -lmsgpackc
+
 SOURCES *= \
 	$$PWD/GJson.cpp
 
