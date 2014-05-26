@@ -37,9 +37,12 @@
 
 class GMainLoggerThread;
 
-static GMainLoggerThread	*_pMainLoggerThread	= 0;
-static GLogger				_pMainLogger;
-static int					_nLogEvent			= (-1);
+static GMainLoggerThread				*_pMainLoggerThread	= 0;
+static GLogger							_pMainLogger;
+static int								_nLogEvent			= (-1);
+static QMap<int,GOutputLoggerThread*>	_pOutputs;
+static int								_nCurOutputChannel	= 0;
+static QMutex							_pOutputsMutex( QMutex::NonRecursive );
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GInternalLoggerEvent - событие для передачи основному потоку
@@ -93,7 +96,8 @@ private:
 /// GOutputLoggerThread - потоки вывода лога
 GOutputLoggerThread::GOutputLoggerThread( QByteArray const& strFileName, GLogger::LogFlags nFlags ) :
 	m_strFileName( strFileName ),
-	m_nFlags( nFlags )
+	m_nFlags( nFlags ),
+	m_hFile( -1 )
 {
 	releaseSemaphore();
 }
@@ -103,14 +107,117 @@ GOutputLoggerThread::~GOutputLoggerThread()
 
 }
 
-void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
+bool GOutputLoggerThread::beforeExec()
 {
-	qDebug() << pEvent.level() << pEvent.datetime() << pEvent.message().constData();
+	if( !GSelfOwnedThread::beforeExec() ) return false;
+
+	if( ( 0 == ( m_nFlags && GLogger::Reopen ) ) && ( !_open_log() ) ) return false;
+
+	return true;
 }
 
-static QMap<int,GOutputLoggerThread*>	_pOutputs;
-static int								_nCurOutputChannel = 0;
-static QMutex							_pOutputsMutex( QMutex::NonRecursive );
+void GOutputLoggerThread::afterExec()
+{
+	if( 0 != ( m_nFlags && GLogger::Reopen ) ) return;
+
+}
+
+bool GOutputLoggerThread::_open_log()
+{
+	if( m_strFileName.isEmpty() ) {
+		#ifdef _WIN32
+			m_hFile = fileno( stdout );
+		#else
+			m_hFile = STDOUT_FILENO;
+		#endif
+		return true;
+	}
+
+	m_hFile = ::open( m_strFileName.constData(), O_CREAT | O_WRONLY | O_TEXT, LOG_OPEN_MODE );
+	if( 0 > m_hFile )
+		return false;
+
+	lseek( m_hFile, 0, SEEK_END );
+
+	return true;
+}
+
+void GOutputLoggerThread::_close_log()
+{
+	if( !m_strFileName.isEmpty() )
+		close( m_hFile );
+	m_hFile = (-1);
+}
+
+void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
+{
+	if( ( 0 != ( m_nFlags && GLogger::Reopen ) ) && ( !_open_log() ) ) return;
+
+	// Собсвтенно, запись в лог...
+	char *strLine = (char*) alloca( pEvent.message().size() + 128 );
+	char *s = strLine;
+	if( 0 != ( m_nFlags & GLogger::DateTime ) ) {
+		*(s++) = '[';
+
+		if( 0 != ( m_nFlags & GLogger::Date ) ) {
+			QDate tDate = pEvent.datetime().date();
+			sprintf( s, "%04d/%02d/%02d", tDate.year(), tDate.month(), tDate.day() );
+			s += 10;
+		};
+
+		if( 0 != ( m_nFlags & GLogger::Time ) ) {
+			if( 0 != ( m_nFlags & GLogger::Date ) )
+				*(s++) = ' ';
+
+			QTime tTime = pEvent.datetime().time();
+
+			sprintf( s, "%02d:%02d:%02d", tTime.hour(), tTime.minute(), tTime.second() );
+			s += 8;
+		}
+
+		*(s++) = ']';
+		if( 0 != ( m_nFlags & GLogger::Level ) )
+			*(s++) = ' ';
+	}
+
+	if( 0 != ( m_nFlags & GLogger::Level ) ) {
+		sprintf( s, "<%+04i>", pEvent.level() );
+		s += 6;
+	}
+	if( s != strLine ) {
+		*(s++) = ':';
+		*(s++) = ' ';
+	}
+	strcpy( s, pEvent.message().constData() );
+	s += pEvent.message().size();
+	*(s++) = '\n';
+	*s = '\0';
+
+	// В случае, если мы в консоли под виндами - надо сделать перекодировочку!
+	#ifdef _WIN32
+		if( m_strFileName.isEmpty() ) {
+			int nLen = ::MultiByteToWideChar( CP_UTF8, 0, strLine, -1, 0, 0 ) + 1;
+			wchar_t *wstrLine = (wchar_t*) alloca( nLen * sizeof( wchar_t ) );
+			::MultiByteToWideChar( CP_UTF8, 0, strLine, -1, wstrLine, nLen + 1 );
+
+			// Под результат переаллокировать строку не будем - она по-любому будет
+			// не длинее, чем тот же вариант в UTF-8.
+			s = strLine +
+				::WideCharToMultiByte( ::GetConsoleCP(), 0, wstrLine, -1, strLine, pEvent.message().size() + 128, 0, 0 )
+				- 1;
+		}
+	#endif
+
+	write( m_hFile, strLine, s - strLine );
+
+	if( 0 != ( m_nFlags && GLogger::Reopen ) ) {
+		_close_log();
+	} else if( 0 != ( m_nFlags && GLogger::Unbuffered ) ) {
+		commit( m_hFile );
+	}
+
+//	qDebug() << pEvent.level() << pEvent.datetime() << pEvent.message().constData();
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GLogger - запуск-останов
@@ -132,10 +239,13 @@ void GLogger::stop()
 	delete _pMainLoggerThread;
 	_pMainLoggerThread = 0;
 
-
-	// Теперь
-
-
+	// Теперь надо аккуратно завершить все "выводящие" потоки
+	QMutexLocker pLock( &_pOutputsMutex );
+	foreach( GOutputLoggerThread *pThread, _pOutputs ) {
+		pThread->stopAndWait();
+		delete pThread;
+	}
+	_pOutputs.clear();
 }
 
 GLogger* GLogger::instance()
@@ -152,19 +262,14 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
 	if( !strFileName.isEmpty() ) {
 		QFileInfo pInfo( strFileName );
 		if( pInfo.isDir() ) return (-1);
-		if( pInfo.exists() ) {
-			if( !pInfo.isWritable() ) return (-1);
-			strCanonicalFullName = QDir::toNativeSeparators( pInfo.canonicalFilePath() ).toUtf8();
-		} else {
-			// Файла нет - попробуем его сначала открыть (и заодно очистить, если что)
-			QFile pFile( pInfo.absoluteFilePath() );
-			if( !pFile.open(
-					QIODevice::ReadWrite |
-					( ( 0 != ( nFlags & Overwrite ) ) ? QIODevice::Truncate : QIODevice::Append )
-				) ) return (-1);
-			pFile.close();
-			strCanonicalFullName = QDir::toNativeSeparators( pFile.fileName() ).toUtf8();
-		}
+
+		QFile pFile( pInfo.absoluteFilePath() );
+		if( !pFile.open(
+				QIODevice::ReadWrite |
+				( ( 0 != ( nFlags & Overwrite ) ) ? QIODevice::Truncate : QIODevice::Append )
+			) ) return (-1);
+		pFile.close();
+		strCanonicalFullName = QDir::toNativeSeparators( pFile.fileName() ).toUtf8();
 	}
 
 	QMutexLocker pLock( &_pOutputsMutex );
@@ -219,18 +324,18 @@ void GLogger::vwrite( int nLevel, const char *strFormat, va_list pArgs )
 		return;
 	}
 
-	va_list pCopy;
-	va_copy( pCopy, pArgs );
 
 	#ifdef _WIN32
 		int nSize = _vscprintf( strFormat, pArgs );
 	#else
-		int nSize = vsnprintf( 0, 0, strFormat, pArgs );
+		va_list pCopy;
+		va_copy( pCopy, pArgs );
+		int nSize = vsnprintf( 0, 0, strFormat, pCopy );
 	#endif
 
 	char* strLine = (char*) alloca( nSize + 3 );
 
-	vsnprintf( strLine, nSize + 3, strFormat, pCopy );
+	vsnprintf( strLine, nSize + 3, strFormat, pArgs );
 
 	QCoreApplication::postEvent( _pMainLoggerThread, new GInternalLoggerEvent( nLevel, strLine ) );
 }

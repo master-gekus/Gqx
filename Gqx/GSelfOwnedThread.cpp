@@ -98,6 +98,7 @@ void GSelfOwnedThread::afterExec()
 
 void GSelfOwnedThread::stopAndWait( int nExitCode /*= 0*/, unsigned long nWaitTime /*= ULONG_MAX*/ )
 {
+	if( !isRunning() ) return;
 	QMetaObject::invokeMethod( this, "_exit", Qt::QueuedConnection, Q_ARG( int, nExitCode ) );
 	QThread::wait( nWaitTime );
 }

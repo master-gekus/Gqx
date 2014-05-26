@@ -20,9 +20,18 @@ private:
 private slots:
 	void onNewLoggedEvent( GLoggerEvent const& pEvent );
 
+protected:
+	bool beforeExec();
+	void afterExec();
+
 private:
-	QByteArray	m_strFileName;
+	QByteArray			m_strFileName;
 	GLogger::LogFlags	m_nFlags;
+	int					m_hFile;
+
+private:
+	bool _open_log();
+	void _close_log();
 
 	friend class GLogger;
 };
