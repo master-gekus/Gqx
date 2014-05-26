@@ -259,6 +259,11 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
 {
 	if( 0 == _pMainLoggerThread ) return (-1);
 
+	if( DefaultFlags == nFlags )
+		nFlags = strFileName.isEmpty() ?
+			LogFlags( Unbuffered ) : LogFlags( Full | Reopen );
+
+
 	QByteArray strCanonicalFullName;
 
 	if( !strFileName.isEmpty() ) {

@@ -40,6 +40,8 @@ public:
 		Unbuffered		= 0x0100,
 		Reopen			= 0x0200,
 		Overwrite		= 0x0400,
+
+		DefaultFlags	= 0xFFFF,
 		NoLogFlags		= 0x0000
 	};
 	Q_DECLARE_FLAGS( LogFlags, LogFlag )
@@ -54,7 +56,7 @@ public:
 	static void start();
 	static void stop();
 
-	static int startOutput( QString strFileName = QString(), LogFlags nFlags = LogFlags( Full | Reopen ) );
+	static int startOutput( QString strFileName = QString(), LogFlags nFlags = DefaultFlags );
 	static void stopOutput( int nChannel );
 
 	static void vwrite( int nLevel, const char *strFormat, va_list pArgs );
