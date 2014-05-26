@@ -6,6 +6,7 @@
 #ifdef _WIN32
 	#include <io.h>
 	#define LOG_OPEN_MODE	S_IWRITE
+	#define LOG_OPEN_FLAGS	O_CREAT | O_WRONLY | O_TEXT
 	#define commit _commit
 	#pragma warning(disable : 4996)
 	#include <Windows.h>
@@ -13,6 +14,7 @@
 	#include <unistd.h>
 	#define commit syncfs
 	#define LOG_OPEN_MODE	( S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH )
+	#define LOG_OPEN_FLAGS	O_CREAT | O_WRONLY
 #endif
 
 #include <QCoreApplication>
@@ -133,7 +135,7 @@ bool GOutputLoggerThread::_open_log()
 		return true;
 	}
 
-	m_hFile = ::open( m_strFileName.constData(), O_CREAT | O_WRONLY | O_TEXT, LOG_OPEN_MODE );
+	m_hFile = ::open( m_strFileName.constData(), LOG_OPEN_FLAGS, LOG_OPEN_MODE );
 	if( 0 > m_hFile )
 		return false;
 
