@@ -257,24 +257,35 @@ GLogger* GLogger::instance()
 
 int GLogger::startOutput( QString strFileName, LogFlags nFlags )
 {
-	if( 0 == _pMainLoggerThread ) return (-1);
+	if( 0 == _pMainLoggerThread ) {
+		qDebug( "GLogger::startOutput(): ERROR: GLogger is not started." );
+		return (-1);
+	}
 
 	if( DefaultFlags == nFlags )
 		nFlags = strFileName.isEmpty() ?
 			LogFlags( Unbuffered ) : LogFlags( Full | Reopen );
 
-
 	QByteArray strCanonicalFullName;
 
 	if( !strFileName.isEmpty() ) {
 		QFileInfo pInfo( strFileName );
-		if( pInfo.isDir() ) return (-1);
+		if( pInfo.isDir() ) {
+			qDebug( "GLogger::startOutput(): ERROR: \"%s\" is folder.", pInfo.absoluteFilePath().toUtf8().constData() );
+			return (-1);
+		}
 
 		QFile pFile( pInfo.absoluteFilePath() );
 		if( !pFile.open(
 				QIODevice::ReadWrite |
 				( ( 0 != ( nFlags & Overwrite ) ) ? QIODevice::Truncate : QIODevice::Append )
-			) ) return (-1);
+			) ) {
+			qDebug( "GLogger::startOutput(): ERROR: Can not open file \"%s\" for writing. %s",
+				pInfo.absoluteFilePath().toUtf8().constData(),
+				pFile.errorString().toUtf8().constData()
+			);
+			return (-1);
+		}
 		pFile.close();
 		strCanonicalFullName = QDir::toNativeSeparators( pFile.fileName() ).toUtf8();
 	}
