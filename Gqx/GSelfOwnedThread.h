@@ -43,8 +43,8 @@ protected:
 public:
 	void stopAndWait( int nExitCode = 0, unsigned long nWaitTime = ULONG_MAX );
 
-private slots:
-	void _exit( int nExitCode );
+protected slots:
+	virtual void _exit( int nExitCode );
 
 private:
 	GSelfOwnedThreadPrivate *d;
