@@ -565,6 +565,26 @@ GJson& GJson::at( const char *strKey )
 	return m_d->m_pMap[*( (GJsonPrivate::Key const*)(&strKey) )];
 }
 
+void GJson::append( GJson const& pValue )
+{
+	if( ( Undefined == m_d->m_nType ) || ( Null == m_d->m_nType ) )
+		m_d->m_nType = Array;
+
+	Q_ASSERT( Array == m_d->m_nType );
+
+	m_d->m_pArray.append( pValue );
+}
+
+void GJson::prepend( GJson const& pValue )
+{
+	if( ( Undefined == m_d->m_nType ) || ( Null == m_d->m_nType ) )
+		m_d->m_nType = Array;
+
+	Q_ASSERT( Array == m_d->m_nType );
+
+	m_d->m_pArray.prepend( pValue );
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GJson - преобразование в строку
 struct GJsonPrivate::ToJsonContext

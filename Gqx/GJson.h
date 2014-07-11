@@ -160,6 +160,10 @@ public:
 	inline GJson& operator []( QByteArray const& strKey ) { return at(strKey); }
 
 public:
+	void append( GJson const& pValue );
+	void prepend( GJson const& pValue );
+
+public:
 	static GJson fromJson( const char *strData, int cbData, GJsonParseError *pError = 0 );
 	static GJson fromJson( const char *strData, GJsonParseError *pError = 0 );
 	static inline GJson fromJson( QByteArray const& pData, GJsonParseError *pError = 0 )
