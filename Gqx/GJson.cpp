@@ -4,7 +4,9 @@
 	#endif
 	#include <float.h>
 	#include <math.h>
-	#define isnan _isnan
+	#ifndef isnan
+		#define isnan _isnan
+	#endif
 #else
 	#include <math.h>
 	#include <stdio.h>
@@ -270,8 +272,10 @@ private:
 
 // Поддержка формата сериализации msgpack
 private:
-	void msgpack( msgpack_packer *pk ) const;
-	static GJsonPrivate *msgunpack( msgpack_object const& pk );
+	#ifndef GQX_JSON_NO_MSGPACK
+		void msgpack( msgpack_packer *pk ) const;
+		static GJsonPrivate *msgunpack( msgpack_object const& pk );
+	#endif
 
 private:
 	/*!	\brief Класс-ключ для QMap - чтобы не использовать достаточно "тяжёлый" класс QByteArray
