@@ -8,7 +8,10 @@ INCLUDEPATH *= $$PWD
 #	message( "USING msgpack" )
 #}
 
-!win32: LIBS *= -lrt -lmsgpackc
+!win32: {
+	LIBS *= -lrt
+	!contains( DEFINES, GQX_JSON_NO_MSGPACK ): LIBS *= -lmsgpackc
+}
 
 SOURCES *= \
 	$$PWD/GJson.cpp
