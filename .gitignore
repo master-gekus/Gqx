@@ -3,3 +3,4 @@ debug
 debug5
 release
 **/*.pro.user*
+**/build*/*
