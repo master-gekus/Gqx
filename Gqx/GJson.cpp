@@ -297,7 +297,9 @@ private:
 
     ~Key()
     {
-      free( d );
+      // В отличии от strdup, qstrdup возвращает указатель, который удаляется
+      // через delete! Cм. документацию по qt
+      delete[] d;
     }
 
     bool operator <( Key const& pOther ) const
