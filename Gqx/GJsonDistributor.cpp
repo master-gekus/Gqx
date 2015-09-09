@@ -106,7 +106,7 @@ void GJsonDistributor::onJsonRecieved( GDistributableJson const pJsonDistributab
 		qDebug( "GJsonDistributor::onJsonRecieved(): Json without \"command\" field - skipped!" );
 		return;
 	}
-	QByteArray strCommand = pJson["command"];
+	QByteArray strCommand = pJson["command"].toByteArray();
 	strCommand[0] = toupper( strCommand[0] );
 
 	// Посмотрим, есть ли такой метод?

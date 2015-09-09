@@ -1,6 +1,7 @@
 #ifndef GJSONDISTRIBUTOR_H
 #define GJSONDISTRIBUTOR_H
 
+#include <QObject>
 #include <QMetaType>
 #include <QExplicitlySharedDataPointer>
 

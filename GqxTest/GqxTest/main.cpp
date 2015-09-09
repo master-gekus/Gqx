@@ -17,16 +17,20 @@ int main(int argc, char *argv[])
 	j["Жопа"] = "Срака!";
 	j["Проверка"].resize( 5 );
 	j["Проверка"][0] = true;
+	j["pInfinity"]=std::numeric_limits<double>::infinity();
+	j["nInfinity"]=-std::numeric_limits<double>::infinity();
+	j["pNaN"]=std::numeric_limits<double>::quiet_NaN();
+	j["nNaN"]=-std::numeric_limits<double>::quiet_NaN();
 	j[QObject::trUtf8( "Проверка" )][1] = "Однажды в студёную зимнюю пору я из лесу вышел поссать на мороз.";
 
 	qDebug( "j = \r\n%s", j.toJson().constData() );
-
+#ifndef GQX_JSON_NO_MSGPACK
 	QByteArray pMsgPack = j.msgpack();
 	qDebug( "packed = %s", pMsgPack.toHex().constData() );
 
 	GJson j1 = 	GJson::msgunpack( pMsgPack );
 	qDebug( "j1 = \r\n%s", j1.toJson().constData() );
-
+#endif
 
 	MainWindow w;
 
