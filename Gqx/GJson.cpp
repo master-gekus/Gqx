@@ -1571,8 +1571,8 @@ void GJsonPrivate::msgpack( msgpack_packer *pk ) const
       break;
 
     case GJson::String:
-      msgpack_pack_raw( pk, m_strValue.size() );
-      msgpack_pack_raw_body( pk, m_strValue.constData(), m_strValue.size() );
+      msgpack_pack_str(pk, m_strValue.size());
+      msgpack_pack_str_body(pk, m_strValue.constData(), m_strValue.size());
       break;
 
     case GJson::Bool:
@@ -1594,8 +1594,8 @@ void GJsonPrivate::msgpack( msgpack_packer *pk ) const
         for( QMap<GJsonPrivate::Key,GJson>::const_iterator i = m_pMap.constBegin(); i != m_pMap.constEnd(); ++i ) {
           const char*	strKey	= (const char*) i.key().d;
           int			cbKey	= qstrlen( strKey );
-          msgpack_pack_raw( pk, cbKey );
-          msgpack_pack_raw_body( pk, strKey, cbKey );
+          msgpack_pack_str(pk, cbKey);
+          msgpack_pack_str_body(pk, strKey, cbKey);
           i.value().m_d->msgpack( pk );
         };
       };
@@ -1634,11 +1634,11 @@ GJsonPrivate* GJsonPrivate::msgunpack( msgpack_object const& pk )
     case MSGPACK_OBJECT_NEGATIVE_INTEGER:
       return new GJsonPrivate( (qint64) pk.via.i64 );
 
-    case MSGPACK_OBJECT_DOUBLE:
-      return new GJsonPrivate( pk.via.dec );
+    case MSGPACK_OBJECT_FLOAT:
+      return new GJsonPrivate(pk.via.f64);
 
-    case MSGPACK_OBJECT_RAW:
-      return new GJsonPrivate( QByteArray( (const char*) pk.via.raw.ptr, (int) pk.via.raw.size ) );
+    case MSGPACK_OBJECT_STR:
+      return new GJsonPrivate(QByteArray(pk.via.str.ptr, (int) pk.via.str.size));
 
     case MSGPACK_OBJECT_ARRAY: {
         GJsonPrivate *pArray = new GJsonPrivate( GJson::Array );
@@ -1655,17 +1655,17 @@ GJsonPrivate* GJsonPrivate::msgunpack( msgpack_object const& pk )
           // выступать любой тип элемента. Но мы в качестве ключа принимаем только
           // строки - поэтому все остальные типы будем просто игнорировать.
           // По-хорошему, надо бы ещё и проверить на корректность переданное имя.
-          if( pk.via.map.ptr[i].key.type != MSGPACK_OBJECT_RAW ) continue;
+          if( pk.via.map.ptr[i].key.type != MSGPACK_OBJECT_STR ) continue;
 
           // msgpack не преобразует строки, а просто расставляет ссылки, поэтому
           // имя у нас не 0-терминировано. Придётся делать копию...
-          size_t nLen = pk.via.map.ptr[i].key.via.raw.size;
+          size_t nLen = pk.via.map.ptr[i].key.via.str.size;
           char *strKey = (char *)alloca( nLen + 1 );
-          memcpy( strKey, pk.via.map.ptr[i].key.via.raw.ptr, nLen );
+          memcpy(strKey, pk.via.map.ptr[i].key.via.str.ptr, nLen);
           strKey[nLen] = '\0';
 
           pMap->m_pMap.insert(
-            *( (Key const*) (&strKey) ),
+            *((Key const*) (&strKey)),
             GJson( msgunpack( pk.via.map.ptr[i].val ) )
           );
         };
