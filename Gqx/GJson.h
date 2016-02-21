@@ -136,6 +136,8 @@ public:
   inline operator const char* () const { return toStr(); }
   inline operator QVariant () const { return toVariant(); }
 
+  template<typename T> inline T to() const { return (T)(*this);}
+
 public:
   int count() const;
   void resize( int nNewSize );
@@ -190,5 +192,16 @@ private:
 
 Q_DECLARE_METATYPE( GJson )
 
+template<>
+inline QString GJson::to() const
+{
+  return this->toString();
+}
+
+template<>
+inline QByteArray GJson::to() const
+{
+  return this->toByteArray();
+}
 
 #endif // GJSON_H
