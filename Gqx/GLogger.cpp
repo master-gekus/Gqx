@@ -250,6 +250,12 @@ void GLogger::stop()
   _pOutputs.clear();
 }
 
+bool
+GLogger::isRunning()
+{
+  return (0 != _pMainLoggerThread);
+}
+
 GLogger* GLogger::instance()
 {
   return &_pMainLogger;
