@@ -14,14 +14,17 @@ TEMPLATE = app
 SOURCES += \
   main.cpp \
   main_window.cpp \
-  app.cpp
+  app.cpp \
+    about_box.cpp
 
 HEADERS += \
   main_window.h \
-  app.h
+  app.h \
+    about_box.h
 
 FORMS += \
-  main_window.ui
+  main_window.ui \
+    about_box.ui
 
 RESOURCES += \
   resources.qrc

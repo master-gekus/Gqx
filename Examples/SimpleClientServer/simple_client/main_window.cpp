@@ -1,5 +1,7 @@
 #include <QComboBox>
+
 #include "app.h"
+#include "about_box.h"
 
 #include "main_window.h"
 #include "ui_main_window.h"
@@ -25,9 +27,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction *action = ui->mainToolBar->insertWidget(list[index+1], combo_host_);
     action->setVisible(true);
   }
+
 }
 
 MainWindow::~MainWindow()
 {
   delete ui;
+}
+
+void
+MainWindow::on_actionHelpAbout_triggered()
+{
+  AboutBox(this).exec();
 }

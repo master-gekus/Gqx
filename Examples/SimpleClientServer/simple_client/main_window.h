@@ -21,6 +21,9 @@ private:
   Ui::MainWindow *ui;
   QComboBox *combo_host_;
 
+private slots:
+  void on_actionHelpAbout_triggered();
+
 };
 
 #endif // MAIN_WINDOW_H
