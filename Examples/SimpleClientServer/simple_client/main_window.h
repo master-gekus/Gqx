@@ -17,6 +17,9 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
 
+protected:
+  void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE Q_DECL_FINAL;
+
 private:
   Ui::MainWindow *ui;
   QComboBox *combo_host_;

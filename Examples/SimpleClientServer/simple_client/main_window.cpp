@@ -1,10 +1,15 @@
 #include <QComboBox>
+#include <QSettings>
 
 #include "app.h"
 #include "about_box.h"
 
 #include "main_window.h"
 #include "ui_main_window.h"
+
+#define SETTINGS_GROUP QStringLiteral("Main Window")
+#define SETTINGS_GEOMETRY QStringLiteral("Geometry")
+#define SETTINGS_STATE QStringLiteral("State")
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -28,11 +33,26 @@ MainWindow::MainWindow(QWidget *parent) :
     action->setVisible(true);
   }
 
+  QSettings settings;
+  settings.beginGroup(SETTINGS_GROUP);
+  restoreGeometry(settings.value(SETTINGS_GEOMETRY).toByteArray());
+  restoreState(settings.value(SETTINGS_STATE).toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
   delete ui;
+}
+
+void
+MainWindow::closeEvent(QCloseEvent* event)
+{
+  QSettings settings;
+  settings.beginGroup(SETTINGS_GROUP);
+  settings.setValue(SETTINGS_GEOMETRY, saveGeometry());
+  settings.setValue(SETTINGS_STATE, saveState());
+
+  QMainWindow::closeEvent(event);
 }
 
 void
