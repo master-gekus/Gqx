@@ -1240,7 +1240,10 @@ struct GJsonPrivate::FromJsonContext
       case '[':	// Начало массива
         return parse_array();
       case '"':	// Значение - строка.
-        return parse_string();
+        {
+          QByteArray result;
+          return parse_string(result) ? new GJsonPrivate(result) : 0;
+        }
     }
 
     // Это может быть число или значение типа bool
@@ -1486,17 +1489,15 @@ struct GJsonPrivate::FromJsonContext
     return 0;
   }
 
-  GJsonPrivate *parse_string()
+  bool parse_string(QByteArray& pResult)
   {
     // Строки не расширяются - могут только сокращаться, поэтому вполне можно зааллокировать
     // количество символов, которые остались в разбираемой строке - больше точно не будет!
-    QByteArray pResult;
+    pResult.clear();
     pResult.reserve( ( m_pLast - m_pCurrent ) + 2 );
 
-    if( !next() ) {
-      error( GJsonParseError::EndOfData );
-      return 0;
-    }
+    if( !next() )
+      return error( GJsonParseError::EndOfData );
 
     while( !is_empty() ) {
       bool bStep = true;
@@ -1511,7 +1512,7 @@ struct GJsonPrivate::FromJsonContext
             };
 
             // Иначе - пропустим все пробелы и посмотрим, что там!
-            if( !skip_spaces( false ) ) return 0;
+            if( !skip_spaces( false ) ) return false;
 
             if( ( !is_empty() ) &&  ( '"' == cur() ) )	// Снова открывающая кавычка - пошли по-новой!
               break;
@@ -1519,13 +1520,11 @@ struct GJsonPrivate::FromJsonContext
 
           // Если дошли сюда - то значит после закрывающей кавычки нет новой открывающей -
           // и это признак конца строки.
-          return new GJsonPrivate( pResult );
+          return true;
 
         case '\\':
-          if( !next() ) {
-            error( GJsonParseError::EndOfData );
-            return 0;
-          }
+          if( !next() )
+            return error( GJsonParseError::EndOfData );
 
           switch( cur() ) {
             case 'a':	pResult += '\a'; break;
@@ -1541,12 +1540,13 @@ struct GJsonPrivate::FromJsonContext
             case '?':	pResult += '?'; break;
 
             case 'x':	{	// Это шестнадцатиричное предствление строки.
-                if( !next() ) {
-                  error( GJsonParseError::EndOfData );
-                  return 0;
-                }
+                if( !next() )
+                  return error( GJsonParseError::EndOfData );
+
                 unsigned long long nValue;
-                if( !get_hex( nValue )  ) return 0;
+                if( !get_hex( nValue )  )
+                  return false;
+
                 pResult += (char)( nValue & 0xFF );
                 bStep = false;
               };
@@ -1556,7 +1556,9 @@ struct GJsonPrivate::FromJsonContext
               if( is_odigit( cur() ) ) {
                 // Восьмеричное значение
                 unsigned long long nValue;
-                if( !get_octal( nValue )  ) return 0;
+
+                if( !get_octal( nValue )  )
+                  return false;
                 pResult += (char)( nValue & 0xFF );
                 bStep = false;
                 break;
@@ -1576,8 +1578,7 @@ struct GJsonPrivate::FromJsonContext
         next();
     }
 
-    error( GJsonParseError::EndOfData );
-    return 0;
+    return error( GJsonParseError::EndOfData );
   }
 };
 
