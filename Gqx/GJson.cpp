@@ -446,7 +446,7 @@ double GJson::toDouble() const
 
 QString GJson::toString() const
 {
-  return QString::fromUtf8( m_d->m_strValue );
+  return QString::fromUtf8(m_d->m_strValue, m_d->m_strValue.size());
 }
 
 QByteArray GJson::toByteArray() const
@@ -465,7 +465,8 @@ QVariant GJson::toVariant() const
     case Bool:		return QVariant( m_d->m_bValue );
     case Integer:	return QVariant( m_d->m_iValue );
     case Double:	return QVariant( m_d->m_dValue );
-    case String:	return QVariant( QString::fromUtf8( m_d->m_strValue ) );
+    case String:	return QVariant(QString::fromUtf8(m_d->m_strValue,
+                                                    m_d->m_strValue.size()));
     default:		return QVariant();
   }
 }
