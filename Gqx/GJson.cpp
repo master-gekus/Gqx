@@ -1558,7 +1558,7 @@ GJson GJson::fromJson( const char *strData, int cbData, GJsonParseError *pError 
     }
 
     pError->error	= pContext.m_nErrorCode;
-    pError->offset	= ( strData - pContext.m_pCurrent );
+    pError->offset	= (pContext.m_pCurrent - strData);
     pError->col		= pContext.m_nCol;
     pError->row		= pContext.m_nLine;
   }
