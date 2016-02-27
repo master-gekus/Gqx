@@ -1193,40 +1193,26 @@ struct GJsonPrivate::FromJsonContext
     return get_number( nValue, is_hdigit, 16, nMinDigits, nMaxDigits );
   }
 
-  bool get_name( QByteArray& strResult )
+  bool get_name(QByteArray& result)
   {
-    const char*	strStart	= m_pCurrent;
-    int			nCount		= 0;
+    if ('"' == cur())
+      return parse_string(result);
 
-    // Даём возможность не заключать имена полей в кавычки!
-    bool bInQuotes = false;
+    const char*	start = m_pCurrent;
+    int count = 0;
 
-    if( '"' == cur() ) {
-      if( !next() )
-        return error( GJsonParseError::EndOfData );
-      bInQuotes = true;
-      strStart++;
-    }
+    if (!is_alpha(cur(),false))
+      return error(GJsonParseError::InvalidName);
 
-    /// \todo: Добавить возможность имён в UTF-8!
+    while (true)
+      {
+        count++;
+        if (!next())
+          return error(GJsonParseError::EndOfData);
+        if (!is_alpha(cur(), true)) break;
+      }
 
-    if( !is_alpha( cur(), false ) )
-      return error( GJsonParseError::InvalidName );
-
-    while( true ) {
-      nCount++;
-      if( !next() )
-        return error( GJsonParseError::EndOfData );
-      if( !is_alpha( cur(), true ) ) break;
-    };
-
-    if( bInQuotes ) {
-      if( '"' != cur() )
-        return error( GJsonParseError::InvalidName );
-      next();
-    }
-
-    strResult = QByteArray( strStart, nCount );
+    result = QByteArray(start, count);
     return true;
   }
 
