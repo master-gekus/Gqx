@@ -8,6 +8,11 @@
 
 #define SIMPLE_TEST_COUNT 10
 
+namespace
+{
+  quint64 random_quint64();
+}
+
 class GJsonTest : public QObject
 {
   Q_OBJECT
@@ -17,11 +22,11 @@ public:
 
 private:
   template<typename T>
-  struct Rnd_Int
+  struct Rnd_Integral
   {
     static void create(T& v)
     {
-      v = (T) qrand();
+      v = (T) random_quint64();
     }
   };
 
@@ -39,7 +44,7 @@ private:
     }
   };
 
-  template<typename T, class rnd = Rnd_Int<T> >
+  template<typename T, class rnd = Rnd_Integral<T> >
   struct simple_test
   {
     static void init(int count)
@@ -113,3 +118,22 @@ GJsonTest::GJsonTest()
 QTEST_APPLESS_MAIN(GJsonTest)
 
 #include "gjson_test.moc"
+
+namespace
+{
+  quint64 random_quint64()
+  {
+    int rnd_max_bits = 0;
+    for (quint64 rnd_max = RAND_MAX; rnd_max != 0; rnd_max_bits++)
+      rnd_max >>=1;
+
+    quint64 cur_rnd = (quint64) qrand();
+    for (int bits = 8 * sizeof(quint64); bits > 0; bits -= rnd_max_bits)
+      {
+        cur_rnd <<= rnd_max_bits;
+        cur_rnd |= (quint64) qrand();
+      }
+
+    return cur_rnd;
+  }
+}
