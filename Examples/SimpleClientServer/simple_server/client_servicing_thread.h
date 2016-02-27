@@ -26,6 +26,9 @@ public:
   static bool isListEmpty();
   static void stopAll();
 
+public:
+  const char* peerInfo() const;
+
 protected:
   bool beforeExec() Q_DECL_OVERRIDE Q_DECL_FINAL;
   void afterExec() Q_DECL_OVERRIDE Q_DECL_FINAL;
@@ -57,5 +60,19 @@ private:
 
   friend class ClientServicingThread;
 };
+
+#define C_TRACE(s,...) \
+  GLogger::info("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+#define C_CHATTER(s,...) \
+  GLogger::chatter("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+#define C_INFO(s,...) \
+  GLogger::info("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+#define C_WARN(s,...) \
+  GLogger::warning("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+#define C_ERROR(s,...) \
+  GLogger::error("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+#define C_FATAL(s,...) \
+  GLogger::critical("[%s]: " s, peerInfo(), ##__VA_ARGS__)
+
 
 #endif // CLIENTSERVICINGTHREAD_H

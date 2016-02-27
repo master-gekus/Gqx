@@ -4,6 +4,9 @@
 #include <QMap>
 #include <QEventLoop>
 #include <QTcpSocket>
+#include <QHostAddress>
+
+#include "logging.h"
 
 #include "client_servicing_thread.h"
 #include "client_servicing_thread_p.h"
@@ -41,7 +44,10 @@ ClientServicingThreadPrivate::ClientServicingThreadPrivate(ClientServicingThread
                                                            quintptr socket_handle) :
   owner_(owner),
   socket_handle_(socket_handle),
-  socket_(0)
+  socket_(0),
+  peer_port_(0),
+  nat_port_(0),
+  disconnect_requested_(false)
 {
 }
 
@@ -52,6 +58,9 @@ ClientServicingThreadPrivate::~ClientServicingThreadPrivate()
 void
 ClientServicingThreadPrivate::onSocketDisconnected()
 {
+  if (!disconnect_requested_)
+    C_WARN("Connection lost.");
+
   QMetaObject::invokeMethod(owner_, "_exit", Qt::QueuedConnection,
                             Q_ARG(int, 0));
 }
@@ -60,6 +69,13 @@ void
 ClientServicingThreadPrivate::onSocketReadyRead()
 {
   socket_->write(socket_->readAll());
+}
+
+void
+ClientServicingThreadPrivate::update_peer_info()
+{
+  peer_info_ = peer_addr_.toString().toUtf8() + ":"
+               + QByteArray::number(peer_port_);
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -114,8 +130,11 @@ void
 ClientServicingThread::stopAll()
 {
   for (auto const& thr : list())
-    QMetaObject::invokeMethod(thr.data(), "_exit", Qt::QueuedConnection,
-                              Q_ARG(int, 0));
+    {
+      thr->d->disconnect_requested_ = true;
+      QMetaObject::invokeMethod(thr.data(), "_exit", Qt::QueuedConnection,
+                                Q_ARG(int, 0));
+    }
 
   QEventLoop theLoop;
   while(!isListEmpty())
@@ -133,6 +152,11 @@ ClientServicingThread::beforeExec()
   connect(d->socket_, SIGNAL(readyRead()), d, SLOT(onSocketReadyRead()));
   d->socket_->setSocketDescriptor(d->socket_handle_);
 
+  d->peer_addr_ = d->socket_->peerAddress();
+  d->peer_port_ = d->socket_->peerPort();
+  d->update_peer_info();
+
+  C_TRACE("Connection established.");
   return true;
 }
 
@@ -146,4 +170,10 @@ ClientServicingThread::afterExec()
     }
 
   GSelfOwnedThread::afterExec();
+}
+
+const char*
+ClientServicingThread::peerInfo() const
+{
+  return d->peer_info_.constData();
 }

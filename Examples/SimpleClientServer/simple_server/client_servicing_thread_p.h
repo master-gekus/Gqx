@@ -2,6 +2,7 @@
 #define CLIENT_SERVICING_THREAD_P
 
 #include <QByteArray>
+#include <QHostAddress>
 
 #include "client_servicing_thread.h"
 
@@ -23,11 +24,23 @@ private:
   ClientServicingThread *owner_;
   quintptr socket_handle_;
   QTcpSocket *socket_;
+  QHostAddress peer_addr_,
+               nat_addr_;
+  quint16      peer_port_,
+               nat_port_;
+  QByteArray   peer_info_;
+  bool disconnect_requested_;
   QByteArray data_;
 
 private slots:
   void onSocketDisconnected();
   void onSocketReadyRead();
+
+private:
+  inline const char* peerInfo() const
+    { return peer_info_.constData(); }
+
+  void update_peer_info();
 
 private:
   Q_DISABLE_COPY(ClientServicingThreadPrivate)
