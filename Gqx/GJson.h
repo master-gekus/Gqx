@@ -85,17 +85,18 @@ private:
   GJson( GJsonPrivate *pSource );
 
 public:
-  GJson( const GJson &pSource );
-  GJson( bool bValue );
-  GJson( double dValue );
-  GJson( int nValue );
-  GJson( unsigned int nValue );
-  GJson( qint64 nValue );
-  GJson( quint64 nValue );
-  GJson( const QString &strValue );
-  GJson( const char* strValue );
-  GJson( const QByteArray &pValue );
-  GJson( const QVariant &vValue );
+  GJson(const GJson &pSource);
+  GJson(bool bValue);
+  GJson(int nValue);
+  GJson(unsigned int nValue);
+  GJson(qint64 nValue);
+  GJson(quint64 nValue);
+  GJson(float dValue);
+  GJson(double dValue);
+  GJson(const QString &strValue);
+  GJson(const char* strValue);
+  GJson(const QByteArray &pValue);
+  GJson(const QVariant &vValue);
 
   GJson &operator=( const GJson &pSource );
 
@@ -119,6 +120,7 @@ public:
   unsigned int toUInt() const;
   long long toLongLong() const;
   unsigned long long toULongLong() const;
+  float toFloat() const;
   double toDouble() const;
   QString toString() const;
   QByteArray toByteArray() const;
@@ -130,6 +132,7 @@ public:
   inline operator unsigned int () const { return toUInt(); }
   inline operator long long () const { return toLongLong(); }
   inline operator unsigned long long () const { return toULongLong(); }
+  inline operator float () const { return toFloat(); }
   inline operator double () const { return toDouble(); }
   inline operator QString () const { return toString(); }
   inline operator QByteArray () const { return toByteArray(); }

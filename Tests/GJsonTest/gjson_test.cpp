@@ -97,11 +97,22 @@ private:
 private:
   typedef unsigned int uint;
 private slots:
+  // Bool
+  void test_bool_data()
+  {
+    QTest::addColumn<bool>("value");
+    QTest::newRow("true") << true;
+    QTest::newRow("false") << false;
+  }
+  void test_bool() {simple_test<bool>::run();}
+
   // Integral types
   INTEGRAL_TYPE_TEST(int)
   INTEGRAL_TYPE_TEST(uint)
   INTEGRAL_TYPE_TEST(qint64)
   INTEGRAL_TYPE_TEST(quint64)
+  INTEGRAL_TYPE_TEST(float)
+  INTEGRAL_TYPE_TEST(double)
 
   // "String" types
   STRING_TYPE_TEST(QByteArray, false)
@@ -136,4 +147,44 @@ namespace
 
     return cur_rnd;
   }
+
+  template<typename T>
+  T random_double()
+  {
+    T rnd = ((T)random_quint64())/((T)(random_quint64() + 1));
+
+    // Normalizing...
+    while (rnd  > 1.0)
+      rnd /= 10.0;
+
+    while (rnd  < 0.1)
+      rnd *= 10.0;
+
+    if (0 == (qrand() & 0x4))
+      {
+        int exp = qrand() % std::numeric_limits<T>::max_exponent10;
+        while ((--exp) > 0)
+          rnd *= 10;
+      }
+    else
+      {
+        int exp = qrand() % (-std::numeric_limits<T>::min_exponent10);
+        while ((--exp) > 0)
+          rnd /= 10;
+      }
+
+    return (0 == (qrand() & 0x4)) ? rnd : -rnd;
+  }
+}
+
+template<>
+void GJsonTest::Rnd_Integral<double>::create(double& v)
+{
+  v = random_double<double>();
+}
+
+template<>
+void GJsonTest::Rnd_Integral<float>::create(float& v)
+{
+  v = random_double<float>();
 }

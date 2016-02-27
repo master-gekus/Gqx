@@ -11,6 +11,7 @@
   #include <math.h>
   #include <stdio.h>
 #endif
+#include <limits>
 
 #include <QSharedData>
 #include <QByteArray>
@@ -125,13 +126,15 @@ private:
   {
   }
 
-  GJsonPrivate( double dValue ) :
+  GJsonPrivate(double dValue) :
     m_nType( GJson::Double ),
     m_bValue( (!isnan( dValue )) && ( dValue != 0.0 ) ),
     m_iValue( isnan( dValue ) ? 0 : int( dValue + 0.5 ) ),
-    m_dValue( dValue ),
-    m_strValue( QByteArray::number( dValue, 'g', 18 ) )
+    m_dValue( dValue )
   {
+    char buf[64];
+    sprintf(buf, "%.*g", std::numeric_limits<double>::digits10 + 1, m_dValue);
+    m_strValue = buf;
   }
 
   GJsonPrivate( qint64 nValue ) :
@@ -357,11 +360,6 @@ GJson::GJson( bool bValue ) :
 {
 }
 
-GJson::GJson( double dValue ) :
-  m_d( new GJsonPrivate( dValue ) )
-{
-}
-
 GJson::GJson( int nValue ) :
   m_d( new GJsonPrivate( (qint64) nValue ) )
 {
@@ -381,6 +379,16 @@ GJson::GJson( quint64 nValue ) :
   m_d( new GJsonPrivate( nValue ) )
 {
 
+}
+
+GJson::GJson(double dValue) :
+  m_d(new GJsonPrivate(dValue))
+{
+}
+
+GJson::GJson(float dValue) :
+  m_d(new GJsonPrivate((double)dValue))
+{
 }
 
 GJson::GJson( const QString &strValue ) :
@@ -437,6 +445,11 @@ long long GJson::toLongLong() const
 unsigned long long GJson::toULongLong() const
 {
   return m_d->m_iValue;
+}
+
+float GJson::toFloat() const
+{
+  return m_d->m_dValue;
 }
 
 double GJson::toDouble() const
@@ -689,7 +702,8 @@ void GJsonPrivate::to_json( int nIndent, ToJsonContext *pContext ) const
       break;
 
     case GJson::Double:
-      sprintf( pContext->get_buffer( 64 ), "%g", m_dValue );
+      sprintf(pContext->get_buffer(64), "%.*g",
+              std::numeric_limits<double>::digits10 + 1, m_dValue);
       pContext->release_buffer();
       break;
 
