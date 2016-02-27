@@ -1502,8 +1502,8 @@ struct GJsonPrivate::FromJsonContext
       bool bStep = true;
       switch( cur() ) {
         case '"':
-          if( has_symbols( 2 ) ) {
-            next();
+          next();
+          if( !is_empty() ) {
             if( '"' == cur() ) {
               // Две кавычки подряд внутри строки
               pResult += '"';
