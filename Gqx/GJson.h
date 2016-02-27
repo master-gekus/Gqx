@@ -30,8 +30,12 @@ struct GJsonParseError
   int			offset,
         col,row;
 
-  inline bool isOk() { return ( error >= 0 ); }
-  QString errorString();
+  inline bool isOk() const
+    { return (error >= 0); }
+
+  static QString errorString(ParseError err);
+  inline QString errorString() const
+    { return errorString(error); }
 };
 
 class GJson

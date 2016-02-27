@@ -91,6 +91,50 @@ public:
 } _gqx_json_init;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Parsing error strings
+QString GJsonParseError::errorString(ParseError err)
+{
+  switch(err)
+    {
+    case NoError:
+      return QStringLiteral("No error.");
+
+    case MoreData:
+      return QStringLiteral("Where is more data.");
+
+    case InvalidCharacter:
+      return QStringLiteral("Invalid character.");
+
+    case EndOfData:
+      return QStringLiteral("Unexpected end of data.");
+
+    case IntExpected:
+      return QStringLiteral("Expected integer value.");
+
+    case InvalidNumber:
+      return QStringLiteral("Invalid number representation.");
+
+    case SquareBracketExpected:
+      return QStringLiteral("Square bracket expected.");
+
+    case CurlyBracketExpected:
+      return QStringLiteral("Curly bracket expected.");
+
+    case ColonExpected:
+      return QStringLiteral("Colon expected.");
+
+    case InvalidName:
+      return QStringLiteral("Invalid name of object field.");
+
+    case DuplicateName:
+      return QStringLiteral("Duplicate name of object field.");
+
+    default:
+      return QStringLiteral("<unknown error>");
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GJsonPrivate class
 class GJsonPrivate : public QSharedData
 {
