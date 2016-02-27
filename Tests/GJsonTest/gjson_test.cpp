@@ -8,6 +8,17 @@
 
 #define SIMPLE_TEST_COUNT 10
 
+Q_DECLARE_METATYPE(GJsonParseError::ParseError)
+
+namespace QTest
+{
+  template <>
+  char* toString<GJsonParseError::ParseError>(const GJsonParseError::ParseError& err)
+  {
+    return qstrdup(GJsonParseError::errorString(err).toUtf8().constData());
+  }
+}
+
 namespace
 {
   quint64 random_quint64();
@@ -104,7 +115,7 @@ private slots:
     QTest::newRow("true") << true;
     QTest::newRow("false") << false;
   }
-  void test_bool() {simple_test<bool>::run();}
+  void test_bool() { simple_test<bool>::run();}
 
   // Integral types
   INTEGRAL_TYPE_TEST(int)
@@ -119,6 +130,52 @@ private slots:
   STRING_TYPE_TEST(QByteArray, true)
   STRING_TYPE_TEST(QString, true)
   STRING_TYPE_TEST(QString, false)
+
+#define TEST_PARISNG_SIGLE_LINE(name, json) \
+  static char tst_data_##name[] = json; \
+  QTest::newRow(#json) << QByteArray(tst_data_##name) \
+    << GJsonParseError::NoError << (int)((sizeof(tst_data_##name) - 1)) << 1 \
+    << (int)sizeof(tst_data_##name)
+
+  // Parser test
+  void test_parser_simple_data()
+  {
+    QTest::addColumn<QByteArray>("source");
+    QTest::addColumn<GJsonParseError::ParseError>("error_code");
+    QTest::addColumn<int>("offset");
+    QTest::addColumn<int>("row");
+    QTest::addColumn<int>("col");
+
+    TEST_PARISNG_SIGLE_LINE(null, "null");
+    TEST_PARISNG_SIGLE_LINE(bool_true, "true");
+    TEST_PARISNG_SIGLE_LINE(bool_false, "false");
+    TEST_PARISNG_SIGLE_LINE(simple_int, "123");
+    TEST_PARISNG_SIGLE_LINE(simple_hex, "0xFA9C");
+    TEST_PARISNG_SIGLE_LINE(simple_oct, "111");
+    TEST_PARISNG_SIGLE_LINE(decimal_1, "12.008");
+    TEST_PARISNG_SIGLE_LINE(decimal_2, ".000000000000000000000000000000002");
+    TEST_PARISNG_SIGLE_LINE(decimal_3, ".1e182");
+    TEST_PARISNG_SIGLE_LINE(string_1, "\"Tested line\"");
+    TEST_PARISNG_SIGLE_LINE(string_2, "\"Line with \\\"\"");
+    TEST_PARISNG_SIGLE_LINE(string_3, "\"Line with \\x48\"");
+    TEST_PARISNG_SIGLE_LINE(struct_string_1, "{a:\"Line1\", b:\"Line 2\"}");
+    TEST_PARISNG_SIGLE_LINE(array_string_1, "[\"Line1\", \"Line 2\"]");
+    TEST_PARISNG_SIGLE_LINE(struct_string_in_q_1, "{\"a\":\"Line1\", \"b\":\"Line 2\"}");
+  }
+
+  void test_parser_simple()
+  {
+    QFETCH(QByteArray, source);
+
+    GJsonParseError error;
+    GJson::fromJson(source, &error);
+    QTEST(error.error, "error_code");
+    QTEST(error.offset, "offset");
+    QTEST(error.row, "row");
+    QTEST(error.col, "col");
+  }
+
+
 };
 
 GJsonTest::GJsonTest()
