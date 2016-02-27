@@ -58,8 +58,20 @@ private:
     static void run()
     {
       QFETCH(T, value);
-      GJson b(value);
-      QCOMPARE(b.to<T>(), value);
+
+      // Check simple assignment
+      GJson t1(value);
+      QCOMPARE(t1.to<T>(), value);
+
+      // Check conversion from/to JSON representation
+      GJson t2 = GJson::fromJson(t1.toJson());
+      QCOMPARE(t2.to<T>(), value);
+      GJson t3 = GJson::fromJson(t1.toJson(GJson::MinSize));
+      QCOMPARE(t3.to<T>(), value);
+
+      // Check conversion from/to msgpack
+      GJson t4 = GJson::msgunpack(t1.msgpack());
+      QCOMPARE(t4.to<T>(), value);
     }
   };
 
