@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class QComboBox;
+
 namespace Ui {
   class MainWindow;
 }
@@ -17,6 +19,8 @@ public:
 
 private:
   Ui::MainWindow *ui;
+  QComboBox *combo_host_;
+
 };
 
 #endif // MAIN_WINDOW_H

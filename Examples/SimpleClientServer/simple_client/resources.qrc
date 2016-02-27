@@ -6,5 +6,8 @@
         <file>res/main_icon/48x48.png</file>
         <file>res/main_icon/64x64.png</file>
         <file>res/main_icon/128x128.png</file>
+        <file>res/buttons24/connect.png</file>
+        <file>res/buttons24/disconnect.png</file>
+        <file>res/buttons24/info.png</file>
     </qresource>
 </RCC>
