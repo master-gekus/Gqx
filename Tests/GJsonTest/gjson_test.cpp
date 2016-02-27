@@ -159,8 +159,11 @@ private slots:
     TEST_PARISNG_SIGLE_LINE(string_2, "\"Line with \\\"\"");
     TEST_PARISNG_SIGLE_LINE(string_3, "\"Line with \\x48\"");
     TEST_PARISNG_SIGLE_LINE(struct_string_1, "{a:\"Line1\", b:\"Line 2\"}");
+    TEST_PARISNG_SIGLE_LINE(struct_string_2, "{a1:\"Line1\", b1:\"Line 2\"}");
     TEST_PARISNG_SIGLE_LINE(array_string_1, "[\"Line1\", \"Line 2\"]");
     TEST_PARISNG_SIGLE_LINE(struct_string_in_q_1, "{\"a\":\"Line1\", \"b\":\"Line 2\"}");
+    TEST_PARISNG_SIGLE_LINE(struct_string_in_q_2, "{\"a.b\":\"Line1\", \"b.a\":\"Line 2\"}");
+    TEST_PARISNG_SIGLE_LINE(struct_string_in_q_3, "{\"Один\":\"Line1\", \"Два\":\"Line 2\"}");
   }
 
   void test_parser_simple()
