@@ -5,3 +5,4 @@ include( GSelfOwnedThread.pri )		#
 include( GLogger.pri )				#
 include( GUiHelpers.pri )			#
 include( GConsoleWidget.pri )		#
+include( GIdleHandler.pri )		#
