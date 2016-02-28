@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     int index = list.indexOf(ui->actionFileDisconnect);
     QAction *action = ui->mainToolBar->insertWidget(list[index+1], combo_host_);
     action->setVisible(true);
+    combo_host_->setEditText(QStringLiteral("localhost"));
   }
 
   QSettings settings;

@@ -3,6 +3,8 @@
 
 #include <QApplication>
 
+class TcpConnector;
+
 class ClientApp : public QApplication
 {
   Q_OBJECT
@@ -13,7 +15,11 @@ public:
 
 public:
   QIcon iconMain() const;
+  inline TcpConnector* connector() const
+    { return connector_; }
 
+private:
+  TcpConnector *connector_;
 };
 
 #ifdef qApp

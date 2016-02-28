@@ -15,16 +15,19 @@ SOURCES += \
   main.cpp \
   main_window.cpp \
   app.cpp \
-    about_box.cpp
+  about_box.cpp \
+  tcp_connector.cpp
 
 HEADERS += \
   main_window.h \
   app.h \
-    about_box.h
+  about_box.h \
+  tcp_connector.h \
+  tcp_connector_p.h
 
 FORMS += \
   main_window.ui \
-    about_box.ui
+  about_box.ui
 
 RESOURCES += \
   resources.qrc
