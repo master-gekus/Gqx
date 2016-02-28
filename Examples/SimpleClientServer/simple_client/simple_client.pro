@@ -44,5 +44,6 @@ win32: {
 }
 
 include(../../../Gqx/GUiHelpers.pri)
+include(../../../Gqx/GIdleHandler.pri)
 
 DEFINES *= GIT_DESCRIBE=\\\"$$system(git describe --long --always)\\\"

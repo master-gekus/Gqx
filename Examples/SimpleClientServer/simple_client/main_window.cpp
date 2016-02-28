@@ -14,7 +14,8 @@
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  combo_host_(new QComboBox())
+  combo_host_(new QComboBox()),
+  idle_handler_(this)
 {
   ui->setupUi(this);
   setWindowIcon(qApp->iconMain());
@@ -38,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
   settings.beginGroup(SETTINGS_GROUP);
   restoreGeometry(settings.value(SETTINGS_GEOMETRY).toByteArray());
   restoreState(settings.value(SETTINGS_STATE).toByteArray());
+
+  connect(&idle_handler_, SIGNAL(idle()), SLOT(onIdle()));
 }
 
 MainWindow::~MainWindow()
@@ -54,6 +57,13 @@ MainWindow::closeEvent(QCloseEvent* event)
   settings.setValue(SETTINGS_STATE, saveState());
 
   QMainWindow::closeEvent(event);
+}
+
+void
+MainWindow::onIdle()
+{
+  static int counter = 0;
+  qDebug("MainWindow::onIdle(): %d", ++counter);
 }
 
 void
