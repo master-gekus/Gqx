@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "GIdleHandler.h"
+
 class QComboBox;
 
 namespace Ui {
@@ -23,9 +25,13 @@ protected:
 private:
   Ui::MainWindow *ui;
   QComboBox *combo_host_;
+  GIdleHandler idle_handler_;
 
 private slots:
   void on_actionHelpAbout_triggered();
+
+private slots:
+  void onIdle();
 
 };
 
