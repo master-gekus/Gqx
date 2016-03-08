@@ -2,13 +2,13 @@
 
 #include "GUiHelpers.h"
 
-#include "tcp_connector.h"
+#include "GSocketConnector.h"
 
 #include "app.h"
 
 ClientApp::ClientApp(int &argc, char **argv) :
   QApplication(argc, argv),
-  connector_(new TcpConnector(this))
+  connector_(new GSocketConnector(this))
 {
   setOrganizationName(QStringLiteral("Master Gekus"));
   setApplicationName(QStringLiteral("Gqx Simple Client"));

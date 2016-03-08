@@ -1,8 +1,9 @@
 #include <QComboBox>
 #include <QSettings>
 
+#include "GSocketConnector.h"
+
 #include "app.h"
-#include "tcp_connector.h"
 #include "about_box.h"
 
 #include "main_window.h"
@@ -63,7 +64,7 @@ MainWindow::closeEvent(QCloseEvent* event)
 void
 MainWindow::onIdle()
 {
-  bool is_connecting = (TcpConnector::Disconnected
+  bool is_connecting = (GSocketConnector::UnconnectedState
                         != qApp->connector()->state());
   ui->actionFileConnect->setEnabled(!is_connecting);
   ui->actionFileDisconnect->setEnabled(is_connecting);

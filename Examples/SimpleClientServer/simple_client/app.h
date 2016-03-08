@@ -3,7 +3,7 @@
 
 #include <QApplication>
 
-class TcpConnector;
+class GSocketConnector;
 
 class ClientApp : public QApplication
 {
@@ -15,11 +15,11 @@ public:
 
 public:
   QIcon iconMain() const;
-  inline TcpConnector* connector() const
+  inline GSocketConnector* connector() const
     { return connector_; }
 
 private:
-  TcpConnector *connector_;
+  GSocketConnector *connector_;
 };
 
 #ifdef qApp

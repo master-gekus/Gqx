@@ -15,15 +15,12 @@ SOURCES += \
   main.cpp \
   main_window.cpp \
   app.cpp \
-  about_box.cpp \
-  tcp_connector.cpp
+  about_box.cpp
 
 HEADERS += \
   main_window.h \
   app.h \
-  about_box.h \
-  tcp_connector.h \
-  tcp_connector_p.h
+  about_box.h
 
 FORMS += \
   main_window.ui \
@@ -41,5 +38,6 @@ unix: {
 
 include(../../../Gqx/GUiHelpers.pri)
 include(../../../Gqx/GIdleHandler.pri)
+include(../../../Gqx/GSocketConnector.pri)
 
 DEFINES *= GIT_DESCRIBE=\\\"$$system(git describe --long --always)\\\"
