@@ -85,9 +85,12 @@ private:
       GJson t3 = GJson::fromJson(t1.toJson(GJson::MinSize));
       QCOMPARE(t3.to<T>(), value);
 
+#ifndef GQX_JSON_NO_MSGPACK
       // Check conversion from/to msgpack
       GJson t4 = GJson::msgunpack(t1.msgpack());
       QCOMPARE(t4.to<T>(), value);
+#endif
+
     }
   };
 
