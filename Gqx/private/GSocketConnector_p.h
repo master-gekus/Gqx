@@ -14,6 +14,9 @@ private:
 private:
   GSocketConnector* owner_;
   GSocketConnector::ConnectorState state_;
+  GSocketConnectorAbstractEngine *engine_;
+  GSocketConnector::ConnectorError error_;
+  QString error_string_;
 
   friend class GSocketConnector;
 };
