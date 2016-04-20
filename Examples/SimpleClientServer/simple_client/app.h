@@ -27,4 +27,6 @@ private:
 #endif
 #define qApp (static_cast<ClientApp*>(QApplication::instance()))
 
+#define DEFAULT_PORT 6543
+
 #endif // CLIENTAPP_H

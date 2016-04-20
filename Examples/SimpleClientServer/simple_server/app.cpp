@@ -25,7 +25,7 @@ ServerApp::ServerApp(int& argc, char** argv) :
   QCoreApplication(argc, argv)
 {
   setOrganizationName(QStringLiteral("Master Gekus"));
-  setApplicationName(QStringLiteral("FamilyLand Server"));
+  setApplicationName(QStringLiteral("Gqx Simple Server"));
   setApplicationVersion("Version " GIT_DESCRIBE " from " __DATE__ " " __TIME__);
 
   QMetaObject::invokeMethod(this, "initialize", Qt::QueuedConnection);

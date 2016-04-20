@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 #include "GIdleHandler.h"
+#include "GSocketConnector.h"
 
 class QComboBox;
 
@@ -29,9 +30,16 @@ private:
 
 private slots:
   void on_actionHelpAbout_triggered();
+  void on_actionFileConnect_triggered();
+  void on_actionFileDisconnect_triggered();
 
 private slots:
   void onIdle();
+
+  void onConnectorConnected();
+  void onConnectorDisconnected();
+  void onConnectorError(GSocketConnector::ConnectorError);
+  void onConnectorStateChanged(GSocketConnector::ConnectorState);
 
 };
 
