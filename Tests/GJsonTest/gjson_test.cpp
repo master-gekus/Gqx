@@ -17,6 +17,21 @@ namespace QTest
   {
     return qstrdup(GJsonParseError::errorString(err).toUtf8().constData());
   }
+
+  inline bool qCompare(const GJson& json, const char* value, const char *actual,
+                       const char *expected, const char *file, int line)
+  {
+    GJson value_json;
+    GJsonParseError error;
+    value_json = GJson::fromJson(value, &error);
+    if (!qCompare(error.error, GJsonParseError::NoError, "Parse", "Parse",
+                  file, line))
+      return false;
+
+    return qCompare(json.toJson(GJson::MinSize).constData(),
+                    value_json.toJson(GJson::MinSize).constData(), actual,
+                    expected, file, line);
+  }
 }
 
 namespace
@@ -181,7 +196,76 @@ private slots:
     QTEST(error.col, "col");
   }
 
+#define DEF_JSON(json,value) \
+  GJson json; \
+  do { \
+    GJsonParseError error; \
+    json = GJson::fromJson(value, &error); \
+    QCOMPARE(error.error, GJsonParseError::NoError); \
+  } while(0)
 
+  void test_remove()
+  {
+    DEF_JSON(o, "{a:1, b:2, c:3, d:4}");
+
+    o.removeAt("a");
+    QCOMPARE(o, "{b:2, c:3, d:4}");
+
+    o.removeAt("c");
+    QCOMPARE(o, "{b:2, d:4}");
+
+    o.removeAt("q");
+    QCOMPARE(o, "{b:2, d:4}");
+
+    DEF_JSON(a, "[0,1.1,\"2\",3,4,5]");
+
+    a.removeAt(0);
+    QCOMPARE(a, "[1.1,\"2\",3,4,5]");
+
+    a.removeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3,5]");
+
+    a.removeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3]");
+
+    a.removeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3]");
+  }
+
+  void test_take()
+  {
+    DEF_JSON(o, "{a:1, b:2, c:3, d:4}");
+
+    GJson j = o.takeAt("a");
+    QCOMPARE(o, "{b:2, c:3, d:4}");
+    QCOMPARE(j, "1");
+
+    j = o.takeAt("c");
+    QCOMPARE(o, "{b:2, d:4}");
+    QCOMPARE(j, "3");
+
+    j = o.takeAt("q");
+    QCOMPARE(o, "{b:2, d:4}");
+    QCOMPARE(j, "null");
+
+    DEF_JSON(a, "[0,1.1,\"2\",3,4,5]");
+
+    j = a.takeAt(0);
+    QCOMPARE(a, "[1.1,\"2\",3,4,5]");
+    QCOMPARE(j, "0");
+
+    j = a.takeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3,5]");
+    QCOMPARE(j, "4");
+
+    j = a.takeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3]");
+    QCOMPARE(j, "5");
+
+    j = a.takeAt(3);
+    QCOMPARE(a, "[1.1,\"2\",3]");
+    QCOMPARE(j, "null");
+  }
 };
 
 GJsonTest::GJsonTest()

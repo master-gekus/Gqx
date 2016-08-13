@@ -668,6 +668,42 @@ void GJson::prepend( GJson const& pValue )
   m_d->m_pArray.prepend( pValue );
 }
 
+void GJson::removeAt(int index)
+{
+  Q_ASSERT(Array == m_d->m_nType);
+
+  if((0 > index) || (m_d->m_pArray.size() <= index))
+    return;
+
+  m_d->m_pArray.remove(index);
+}
+
+void GJson::removeAt(const char* key)
+{
+  if ((Undefined == m_d->m_nType) || (Null == m_d->m_nType))
+    m_d.operator = (new GJsonPrivate(GJson::Object));
+
+  m_d->m_pMap.remove(*((GJsonPrivate::Key const*)(&key)));
+}
+
+GJson GJson::takeAt(int index)
+{
+  Q_ASSERT(Array == m_d->m_nType);
+
+  if((0 > index) || (m_d->m_pArray.size() <= index))
+    return GJson(GJson::Undefined);
+
+  return m_d->m_pArray.takeAt(index);
+}
+
+GJson GJson::takeAt(const char* key)
+{
+  if ((Undefined == m_d->m_nType) || (Null == m_d->m_nType))
+    return GJson(GJson::Undefined);
+
+  return m_d->m_pMap.take(*((GJsonPrivate::Key const*)(&key)));
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GJson - преобразование в строку
 struct GJsonPrivate::ToJsonContext

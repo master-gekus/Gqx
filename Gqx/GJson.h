@@ -175,6 +175,17 @@ public:
   void append( GJson const& pValue );
   void prepend( GJson const& pValue );
 
+  void removeAt(int index);
+  void removeAt(const char* key);
+
+  inline void removeAt(const QByteArray& key) { removeAt(key.constData()); }
+  inline void removeAt(const QString& key) { removeAt(key.toUtf8().constData());}
+
+  GJson takeAt(int index);
+  GJson takeAt(const char* key);
+  inline GJson takeAt(const QByteArray& key) { return takeAt(key.constData()); }
+  inline GJson takeAt(const QString& key) { return takeAt(key.toUtf8().constData()); }
+
 public:
   static GJson fromJson( const char *strData, int cbData, GJsonParseError *pError = 0 );
   static GJson fromJson( const char *strData, GJsonParseError *pError = 0 );
