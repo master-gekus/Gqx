@@ -261,21 +261,21 @@ GLogger* GLogger::instance()
   return &_pMainLogger;
 }
 
-int GLogger::startOutput( QString strFileName, LogFlags nFlags )
+int GLogger::startOutput(QString out_file_name, LogFlags flags)
 {
   if( 0 == _pMainLoggerThread ) {
     qDebug( "GLogger::startOutput(): ERROR: GLogger is not started." );
     return (-1);
   }
 
-  if( DefaultFlags == nFlags )
-    nFlags = strFileName.isEmpty() ?
+  if( DefaultFlags == flags )
+    flags = out_file_name.isEmpty() ?
       LogFlags( Unbuffered ) : LogFlags( Full | Reopen );
 
   QByteArray strCanonicalFullName;
 
-  if( !strFileName.isEmpty() ) {
-    QFileInfo pInfo( strFileName );
+  if( !out_file_name.isEmpty() ) {
+    QFileInfo pInfo( out_file_name );
     if( pInfo.isDir() ) {
       qDebug( "GLogger::startOutput(): ERROR: \"%s\" is folder.", pInfo.absoluteFilePath().toUtf8().constData() );
       return (-1);
@@ -284,7 +284,7 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
     QFile pFile( pInfo.absoluteFilePath() );
     if( !pFile.open(
         QIODevice::ReadWrite |
-        ( ( 0 != ( nFlags & Overwrite ) ) ? QIODevice::Truncate : QIODevice::Append )
+        ( ( 0 != ( flags & Overwrite ) ) ? QIODevice::Truncate : QIODevice::Append )
       ) ) {
       qDebug( "GLogger::startOutput(): ERROR: Can not open file \"%s\" for writing. %s",
         pInfo.absoluteFilePath().toUtf8().constData(),
@@ -307,7 +307,7 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
     #endif
 
       // Собственно, поток нашли - подправим флаги и вернём индекс
-      pThread->m_nFlags = nFlags;
+      pThread->m_nFlags = flags;
       return i;
     }
   }
@@ -315,24 +315,24 @@ int GLogger::startOutput( QString strFileName, LogFlags nFlags )
   // Потока нет - стало быть, нужно создать!
   int nNewIndex = ++_nCurOutputChannel;
 
-  GOutputLoggerThread *pThread = new GOutputLoggerThread( strCanonicalFullName, nFlags );
+  GOutputLoggerThread *pThread = new GOutputLoggerThread( strCanonicalFullName, flags );
   _pMainLogger.connect( &_pMainLogger, SIGNAL(newLoggedEvent(GLoggerEvent)), pThread, SLOT(onNewLoggedEvent(GLoggerEvent)), Qt::QueuedConnection );
   _pOutputs[nNewIndex] = pThread;
 
   return nNewIndex;
 }
 
-void GLogger::stopOutput( int nChannel )
+void GLogger::stopOutput(int channel)
 {
   GOutputLoggerThread *pThread = 0;
 
   {
     QMutexLocker pLock( &_pOutputsMutex );
 
-    if( !_pOutputs.contains( nChannel ) ) return;
+    if( !_pOutputs.contains( channel ) ) return;
 
-    pThread = _pOutputs[nChannel];
-    _pOutputs.remove( nChannel );
+    pThread = _pOutputs[channel];
+    _pOutputs.remove( channel );
   }
 
   pThread->stopAndWait();
@@ -341,81 +341,82 @@ void GLogger::stopOutput( int nChannel )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GLogger - собственно запись в лог
-void GLogger::vwrite( int nLevel, const char *strFormat, va_list pArgs )
+void GLogger::vwrite(int level, const char *format, va_list args)
 {
-  if( 0 == _pMainLoggerThread ) {
-    qDebug( "GLogger::vwrite():: GLogger not started!" );
-    return;
-  }
+  if(0 == _pMainLoggerThread)
+    {
+      qDebug( "GLogger::vwrite():: GLogger not started!" );
+      return;
+    }
 
 
   #ifdef _WIN32
     int nSize = _vscprintf( strFormat, pArgs );
   #else
     va_list pCopy;
-    va_copy( pCopy, pArgs );
-    int nSize = vsnprintf( 0, 0, strFormat, pCopy );
+    va_copy( pCopy, args );
+    int nSize = vsnprintf( 0, 0, format, pCopy );
   #endif
 
   char* strLine = (char*) alloca( nSize + 3 );
 
-  vsnprintf( strLine, nSize + 3, strFormat, pArgs );
+  vsnprintf( strLine, nSize + 3, format, args );
 
-  QCoreApplication::postEvent( _pMainLoggerThread, new GInternalLoggerEvent( nLevel, strLine ) );
+  QCoreApplication::postEvent( _pMainLoggerThread, new GInternalLoggerEvent( level, strLine ) );
 }
 
-void GLogger::write( int nLevel, const char *strFormat, ... )
+void GLogger::write(int level, const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( nLevel, strFormat, args );
+  va_start( args, format );
+  vwrite( level, format, args );
   va_end( args );
 }
 
-void GLogger::spam( const char *strFormat, ... )
+void GLogger::spam(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Spam, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Spam, format, args);
+  va_end(args);
 }
 
-void GLogger::chatter( const char *strFormat, ... )
+void GLogger::chatter(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Chatter, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Chatter, format, args);
+  va_end(args);
 }
 
-void GLogger::info( const char *strFormat, ... )
+void GLogger::info(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Info, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Info, format, args);
+  va_end(args);
 }
 
-void GLogger::warning( const char *strFormat, ... )
+void GLogger::warning(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Warning, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Warning, format, args);
+  va_end(args);
 }
 
-void GLogger::error( const char *strFormat, ... )
+void GLogger::error(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Error, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Error, format, args);
+  va_end(args);
 }
 
-void GLogger::critical( const char *strFormat, ... )
+void GLogger::critical(const char *format, ...)
 {
   va_list args;
-  va_start( args, strFormat );
-  vwrite( Critical, strFormat, args );
-  va_end( args );
+  va_start(args, format);
+  vwrite(Critical, format, args);
+  va_end(args);
 }
