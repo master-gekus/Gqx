@@ -58,7 +58,8 @@ public:
   static bool isRunning();
 
   static int startOutput(QString out_file_name = QString(),
-                         LogFlags flags = DefaultFlags);
+                         LogFlags flags = DefaultFlags,
+                         qint8 min_level = Min);
   static void stopOutput(int channel);
 
   static void vwrite(int level, const char *format, va_list args);

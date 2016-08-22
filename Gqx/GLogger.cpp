@@ -96,10 +96,13 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// GOutputLoggerThread - потоки вывода лога
-GOutputLoggerThread::GOutputLoggerThread( QByteArray const& strFileName, GLogger::LogFlags nFlags ) :
-  m_strFileName( strFileName ),
-  m_nFlags( nFlags ),
-  m_hFile( -1 )
+GOutputLoggerThread::GOutputLoggerThread(QByteArray const& file_name,
+                                         GLogger::LogFlags flags,
+                                         qint8 min_level) :
+  file_name_(file_name),
+  flags_(flags),
+  file_(-1),
+  min_level_(min_level)
 {
   releaseSemaphore();
 }
@@ -113,91 +116,95 @@ bool GOutputLoggerThread::beforeExec()
 {
   if( !GSelfOwnedThread::beforeExec() ) return false;
 
-  if( ( 0 == ( m_nFlags && GLogger::Reopen ) ) && ( !_open_log() ) ) return false;
+  if( ( 0 == ( flags_ && GLogger::Reopen ) ) && ( !_open_log() ) ) return false;
 
   return true;
 }
 
 void GOutputLoggerThread::afterExec()
 {
-  if( 0 != ( m_nFlags && GLogger::Reopen ) ) return;
+  if( 0 != ( flags_ && GLogger::Reopen ) ) return;
 
 }
 
 bool GOutputLoggerThread::_open_log()
 {
-  if( m_strFileName.isEmpty() ) {
+  if( file_name_.isEmpty() ) {
     #ifdef _WIN32
-      m_hFile = fileno( stdout );
+      file_ = fileno(stdout);
     #else
-      m_hFile = STDOUT_FILENO;
+      file_ = STDOUT_FILENO;
     #endif
     return true;
   }
 
-  m_hFile = ::open( m_strFileName.constData(), LOG_OPEN_FLAGS, LOG_OPEN_MODE );
-  if( 0 > m_hFile )
+  file_ = ::open( file_name_.constData(), LOG_OPEN_FLAGS, LOG_OPEN_MODE );
+  if( 0 > file_ )
     return false;
 
-  lseek( m_hFile, 0, SEEK_END );
+  lseek( file_, 0, SEEK_END );
 
   return true;
 }
 
 void GOutputLoggerThread::_close_log()
 {
-  if( !m_strFileName.isEmpty() )
-    close( m_hFile );
-  m_hFile = (-1);
+  if( !file_name_.isEmpty() )
+    close( file_ );
+  file_ = (-1);
 }
 
-void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
+void GOutputLoggerThread::onNewLoggedEvent(GLoggerEvent const& event)
 {
-  if( ( 0 != ( m_nFlags && GLogger::Reopen ) ) && ( !_open_log() ) ) return;
+  if (event.level() < min_level_)
+    return;
+
+  if ((0 != (flags_ && GLogger::Reopen)) && (!_open_log()))
+    return;
 
   // Собсвтенно, запись в лог...
-  char *strLine = (char*) alloca( pEvent.message().size() + 128 );
+  char *strLine = (char*) alloca( event.message().size() + 128 );
   char *s = strLine;
-  if( 0 != ( m_nFlags & GLogger::DateTime ) ) {
+  if( 0 != ( flags_ & GLogger::DateTime ) ) {
     *(s++) = '[';
 
-    if( 0 != ( m_nFlags & GLogger::Date ) ) {
-      QDate tDate = pEvent.datetime().date();
+    if( 0 != ( flags_ & GLogger::Date ) ) {
+      QDate tDate = event.datetime().date();
       sprintf( s, "%04d/%02d/%02d", tDate.year(), tDate.month(), tDate.day() );
       s += 10;
     };
 
-    if( 0 != ( m_nFlags & GLogger::Time ) ) {
-      if( 0 != ( m_nFlags & GLogger::Date ) )
+    if( 0 != ( flags_ & GLogger::Time ) ) {
+      if( 0 != ( flags_ & GLogger::Date ) )
         *(s++) = ' ';
 
-      QTime tTime = pEvent.datetime().time();
+      QTime tTime = event.datetime().time();
 
       sprintf( s, "%02d:%02d:%02d", tTime.hour(), tTime.minute(), tTime.second() );
       s += 8;
     }
 
     *(s++) = ']';
-    if( 0 != ( m_nFlags & GLogger::Level ) )
+    if( 0 != ( flags_ & GLogger::Level ) )
       *(s++) = ' ';
   }
 
-  if( 0 != ( m_nFlags & GLogger::Level ) ) {
-    sprintf( s, "<%+04i>", pEvent.level() );
+  if( 0 != ( flags_ & GLogger::Level ) ) {
+    sprintf( s, "<%+04i>", event.level() );
     s += 6;
   }
   if( s != strLine ) {
     *(s++) = ':';
     *(s++) = ' ';
   }
-  strcpy( s, pEvent.message().constData() );
-  s += pEvent.message().size();
+  strcpy( s, event.message().constData() );
+  s += event.message().size();
   *(s++) = '\n';
   *s = '\0';
 
   // В случае, если мы в консоли под виндами - надо сделать перекодировочку!
   #ifdef _WIN32
-    if( m_strFileName.isEmpty() ) {
+    if( file_name_.isEmpty() ) {
       int nLen = ::MultiByteToWideChar( CP_UTF8, 0, strLine, -1, 0, 0 ) + 1;
       wchar_t *wstrLine = (wchar_t*) alloca( nLen * sizeof( wchar_t ) );
       ::MultiByteToWideChar( CP_UTF8, 0, strLine, -1, wstrLine, nLen + 1 );
@@ -205,17 +212,17 @@ void GOutputLoggerThread::onNewLoggedEvent( GLoggerEvent const& pEvent )
       // Под результат переаллокировать строку не будем - она по-любому будет
       // не длинее, чем тот же вариант в UTF-8.
       s = strLine +
-        ::WideCharToMultiByte( ::GetConsoleCP(), 0, wstrLine, -1, strLine, pEvent.message().size() + 128, 0, 0 )
+        ::WideCharToMultiByte( ::GetConsoleCP(), 0, wstrLine, -1, strLine, event.message().size() + 128, 0, 0 )
         - 1;
     }
   #endif
 
-  if( write( m_hFile, strLine, s - strLine ) ){};
+  if( write( file_, strLine, s - strLine ) ){};
 
-  if( 0 != ( m_nFlags && GLogger::Reopen ) ) {
+  if( 0 != ( flags_ && GLogger::Reopen ) ) {
     _close_log();
-  } else if( 0 != ( m_nFlags && GLogger::Unbuffered ) ) {
-    commit( m_hFile );
+  } else if( 0 != ( flags_ && GLogger::Unbuffered ) ) {
+    commit( file_ );
   }
 
 //	qDebug() << pEvent.level() << pEvent.datetime() << pEvent.message().constData();
@@ -261,12 +268,13 @@ GLogger* GLogger::instance()
   return &_pMainLogger;
 }
 
-int GLogger::startOutput(QString out_file_name, LogFlags flags)
+int GLogger::startOutput(QString out_file_name, LogFlags flags, qint8 min_level)
 {
-  if( 0 == _pMainLoggerThread ) {
-    qDebug( "GLogger::startOutput(): ERROR: GLogger is not started." );
-    return (-1);
-  }
+  if (0 == _pMainLoggerThread)
+    {
+      qDebug("GLogger::startOutput(): ERROR: GLogger is not started.");
+      return (-1);
+    }
 
   if( DefaultFlags == flags )
     flags = out_file_name.isEmpty() ?
@@ -301,13 +309,13 @@ int GLogger::startOutput(QString out_file_name, LogFlags flags)
   foreach( int i, _pOutputs.keys() ) {
     GOutputLoggerThread *pThread = _pOutputs[i];
     #ifdef _WIN32
-      if( 0 == qstricmp( pThread->m_strFileName.constData(), strCanonicalFullName.constData() ) ) {
+      if (0 == qstricmp(pThread->file_name_.constData(), strCanonicalFullName.constData())) {
     #else
-      if( pThread->m_strFileName == strCanonicalFullName  ) {
+      if (pThread->file_name_ == strCanonicalFullName) {
     #endif
 
       // Собственно, поток нашли - подправим флаги и вернём индекс
-      pThread->m_nFlags = flags;
+      pThread->flags_ = flags;
       return i;
     }
   }
@@ -315,7 +323,8 @@ int GLogger::startOutput(QString out_file_name, LogFlags flags)
   // Потока нет - стало быть, нужно создать!
   int nNewIndex = ++_nCurOutputChannel;
 
-  GOutputLoggerThread *pThread = new GOutputLoggerThread( strCanonicalFullName, flags );
+  GOutputLoggerThread *pThread = new GOutputLoggerThread(strCanonicalFullName,
+                                                         flags, min_level);
   _pMainLogger.connect( &_pMainLogger, SIGNAL(newLoggedEvent(GLoggerEvent)), pThread, SLOT(onNewLoggedEvent(GLoggerEvent)), Qt::QueuedConnection );
   _pOutputs[nNewIndex] = pThread;
 
@@ -351,7 +360,7 @@ void GLogger::vwrite(int level, const char *format, va_list args)
 
 
   #ifdef _WIN32
-    int nSize = _vscprintf( strFormat, pArgs );
+    int nSize = _vscprintf(format, args);
   #else
     va_list pCopy;
     va_copy( pCopy, args );
