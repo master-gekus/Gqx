@@ -49,6 +49,16 @@ void
 ServerApp::shutdown()
 {
   if (GLogger::isRunning())
+    {
+      P_TRACE("This is a trace log message!");
+      P_CHATTER("This is a chatter log message!");
+      P_INFO("This is a info log message!");
+      P_WARN("This is a warning log message!");
+      P_ERROR("This is a error log message!");
+      P_FATAL("This is a critical log message!");
+    }
+
+  if (GLogger::isRunning())
       INFO("%s starting shutdown process...",
            applicationName().toUtf8().constData());
 
@@ -110,13 +120,37 @@ namespace
     GLogger::start();
     if (isatty(fileno(stdout)))
       {
-        GLogger::startOutput();
+        GLogger::startOutput(QString(), GLogger::DefaultFlags, GLogger::Info);
       }
     else
       {
         GLogger::startOutput(QString(),
-                             GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered));
+                             GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered),
+                             GLogger::Info);
       }
+
+      GLogger::startOutput(QStringLiteral("spam_log.log"),
+                           GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered),
+                           GLogger::Spam);
+
+      GLogger::startOutput(QStringLiteral("info_log.log"),
+                           GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered),
+                           GLogger::Info);
+
+      GLogger::startOutput(QStringLiteral("error_log.log"),
+                           GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered),
+                           GLogger::Error);
+
+      GLogger::startOutput(QStringLiteral("critical_log.log"),
+                           GLogger::LogFlags(GLogger::Full | GLogger::Unbuffered),
+                           GLogger::Critical);
+
+      TRACE("This is a trace log message!");
+      CHATTER("This is a chatter log message!");
+      INFO("This is a info log message!");
+      WARN("This is a warning log message!");
+      ERROR("This is a error log message!");
+      FATAL("This is a critical log message!");
   }
 
   bool _start_listen()
