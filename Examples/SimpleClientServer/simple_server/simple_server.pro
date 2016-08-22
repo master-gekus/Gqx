@@ -28,10 +28,6 @@ unix: {
   QMAKE_CXXFLAGS *= -std=c++11
 }
 
-win32: {
-  DEFINES *= Q_COMPILER_INITIALIZER_LISTS
-}
-
 include(../../../Gqx/GLogger.pri)
 include(../../../Gqx/GSelfOwnedThread.pri)
 
