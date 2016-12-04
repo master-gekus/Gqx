@@ -2,15 +2,8 @@
   #ifndef _CRT_SECURE_NO_WARNINGS
     #define _CRT_SECURE_NO_WARNINGS
   #endif
-  #include <float.h>
-  #include <math.h>
-  #ifndef isnan
-    #define isnan _isnan
-  #endif
-#else
-  #include <math.h>
-  #include <stdio.h>
 #endif
+#include <cmath>
 #include <limits>
 
 #include <QSharedData>
@@ -172,8 +165,8 @@ private:
 
   GJsonPrivate(double dValue) :
     m_nType( GJson::Double ),
-    m_bValue( (!isnan( dValue )) && ( dValue != 0.0 ) ),
-    m_iValue( isnan( dValue ) ? 0 : int( dValue + 0.5 ) ),
+    m_bValue( (!std::isnan( dValue )) && ( dValue != 0.0 ) ),
+    m_iValue( std::isnan( dValue ) ? 0 : int( dValue + 0.5 ) ),
     m_dValue( dValue )
   {
     char buf[64];
