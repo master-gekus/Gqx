@@ -1420,7 +1420,10 @@ struct GJsonPrivate::FromJsonContext
       GJsonPrivate *pElement = parse();
       if( 0 == pElement ) break;
 
-      if( !skip_spaces() ) break;
+      if( !skip_spaces() ) {
+        delete  pElement;
+        break;
+      }
 
       pArray->m_pArray.push_back( GJson( pElement ) );
 
@@ -1480,7 +1483,10 @@ struct GJsonPrivate::FromJsonContext
       GJsonPrivate *pElement = parse();
       if( 0 == pElement ) break;
 
-      if( !skip_spaces() ) break;
+      if( !skip_spaces() ) {
+        delete pElement;
+        break;
+      }
 
       pMap->m_pMap.insert( pKey, GJson( pElement ) );
 
