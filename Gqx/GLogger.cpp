@@ -116,14 +116,14 @@ bool GOutputLoggerThread::beforeExec()
 {
   if( !GSelfOwnedThread::beforeExec() ) return false;
 
-  if( ( 0 == ( flags_ && GLogger::Reopen ) ) && ( !_open_log() ) ) return false;
+  if( ( 0 == ( flags_ & GLogger::Reopen ) ) && ( !_open_log() ) ) return false;
 
   return true;
 }
 
 void GOutputLoggerThread::afterExec()
 {
-  if( 0 != ( flags_ && GLogger::Reopen ) ) return;
+  if( 0 != ( flags_ & GLogger::Reopen ) ) return;
 
 }
 
@@ -159,7 +159,7 @@ void GOutputLoggerThread::onNewLoggedEvent(GLoggerEvent const& event)
   if (event.level() < min_level_)
     return;
 
-  if ((0 != (flags_ && GLogger::Reopen)) && (!_open_log()))
+  if ((0 != (flags_ & GLogger::Reopen)) && (!_open_log()))
     return;
 
   // Собсвтенно, запись в лог...
@@ -219,9 +219,9 @@ void GOutputLoggerThread::onNewLoggedEvent(GLoggerEvent const& event)
 
   if( write( file_, strLine, s - strLine ) ){};
 
-  if( 0 != ( flags_ && GLogger::Reopen ) ) {
+  if( 0 != ( flags_ & GLogger::Reopen ) ) {
     _close_log();
-  } else if( 0 != ( flags_ && GLogger::Unbuffered ) ) {
+  } else if( 0 != ( flags_ & GLogger::Unbuffered ) ) {
     commit( file_ );
   }
 
