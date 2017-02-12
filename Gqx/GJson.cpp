@@ -734,7 +734,12 @@ struct GJsonPrivate::ToJsonContext
 
     if( ( m_nCurrent + nLen ) >= m_nAlloc ) {
       m_nAlloc += ( ( ( nLen + m_nCurrent + 1 - m_nAlloc ) / 1024 ) + 1 ) * 1024;
-      m_pBuffer = (char*) realloc( m_pBuffer, m_nAlloc );
+      char* tmp = (char*) realloc( m_pBuffer, m_nAlloc );
+      /// \todo: Обработка ошибок выделения памяти
+      if( !tmp )
+        free(m_pBuffer);
+
+      m_pBuffer = tmp;
       memset( m_pBuffer + m_nCurrent, 0, m_nAlloc - m_nCurrent );
     }
 
