@@ -335,6 +335,8 @@ private:
       d( qstrdup( pSource.d ) )
     {}
 
+    Key& operator=( Key const& k ) = delete;
+
     ~Key()
     {
       // В отличии от strdup, qstrdup возвращает указатель, который удаляется
