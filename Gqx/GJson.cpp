@@ -56,7 +56,7 @@
 
   \list
   \li Поддержка дополнительного типа Integer - для точного хранения 64-х разрядных целых чисел. В версии Qt
-    целые числа хранятся как qouble, что может привести к потере данных для больших чисел.
+    целые числа хранятся как double, что может привести к потере данных для больших чисел.
   \li Добавлена поддержка NaN (Not a Number) для типа double
   \li Поддержка хранения бинарных данных (без перекодировки) в объектах типа String
   \li Более свободный синтаксис при преобразовании из текста (допускаются запятые перед закрывающими "]" и
@@ -538,7 +538,7 @@ int GJson::count() const
 }
 
 /*!
- * \brief Список ключей объета
+ * \brief Список ключей объекта
  * \return  Возвращает списко ключей, если JSON является объектом (Object).
  *          В остальных случах возвращается пустой список. Порядок ключей в
  *          массиве не определён!
@@ -882,7 +882,7 @@ void GJsonPrivate::object_to_json( int nIndent, ToJsonContext *pContext ) const
 
   pContext->append("{");
 
-  // Сначала выведеме все простые элементы - и посмотрим, есть ли сложные?
+  // Сначала выведем все простые элементы - и посмотрим, есть ли сложные?
   bool bHasObjects = false;
   for( int i = 0; i < pKeys.size(); i++ ) {
     const char*		strKey		= pKeys[i];
@@ -1494,12 +1494,12 @@ struct GJsonPrivate::FromJsonContext
 
       if( ',' == cur() ) {
         if( next() ) {
-          // SYNTEX:
+          // SYNTAX:
           // Некоторое расширение синтаксиса - мы допускаем существование запятой перед
           // закрывающей скобкой.
           if( !skip_spaces() ) break;
           if( '}' == cur() ) { next(); return pMap; };
-          // END SYNTEX
+          // END SYNTAX
         };
         continue;
       };
@@ -1560,7 +1560,7 @@ struct GJsonPrivate::FromJsonContext
             case '\\':	pResult += '\\'; break;
             case '?':	pResult += '?'; break;
 
-            case 'x':	{	// Это шестнадцатиричное предствление строки.
+            case 'x':	{	// Это шестнадцатеричное представление строки.
                 if( !next() )
                   return error( GJsonParseError::EndOfData );
 

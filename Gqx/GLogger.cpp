@@ -162,7 +162,7 @@ void GOutputLoggerThread::onNewLoggedEvent(GLoggerEvent const& event)
   if ((0 != (flags_ & GLogger::Reopen)) && (!_open_log()))
     return;
 
-  // Собсвтенно, запись в лог...
+  // Собственно, запись в лог...
   char *strLine = (char*) alloca( event.message().size() + 128 );
   char *s = strLine;
   if( 0 != ( flags_ & GLogger::DateTime ) ) {
@@ -210,7 +210,7 @@ void GOutputLoggerThread::onNewLoggedEvent(GLoggerEvent const& event)
       ::MultiByteToWideChar( CP_UTF8, 0, strLine, -1, wstrLine, nLen + 1 );
 
       // Под результат переаллокировать строку не будем - она по-любому будет
-      // не длинее, чем тот же вариант в UTF-8.
+      // не длиннее, чем тот же вариант в UTF-8.
       s = strLine +
         ::WideCharToMultiByte( ::GetConsoleCP(), 0, wstrLine, -1, strLine, event.message().size() + 128, 0, 0 )
         - 1;
